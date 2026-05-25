@@ -1,0 +1,37 @@
+CREATE TABLE users (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  email VARCHAR(150) UNIQUE NOT NULL,
+  password_hash VARCHAR(255) NOT NULL,
+  role VARCHAR(20) NOT NULL DEFAULT 'student' CHECK (role IN ('student', 'lecturer', 'admin')),
+  active BOOLEAN DEFAULT true,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE departments (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(200) NOT NULL,
+  slug VARCHAR(200) UNIQUE NOT NULL
+);
+
+CREATE TABLE courses (
+  id SERIAL PRIMARY KEY,
+  department_id INTEGER NOT NULL REFERENCES departments(id) ON DELETE CASCADE,
+  name VARCHAR(200) NOT NULL,
+  code VARCHAR(20) NOT NULL,
+  slug VARCHAR(200) NOT NULL,
+  UNIQUE(department_id, code)
+);
+
+CREATE TABLE papers (
+  id SERIAL PRIMARY KEY,
+  course_id INTEGER NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
+  uploaded_by INTEGER NOT NULL REFERENCES users(id),
+  title VARCHAR(200) NOT NULL,
+  year INTEGER NOT NULL,
+  exam_type VARCHAR(50) NOT NULL DEFAULT 'Final',
+  file_name VARCHAR(255) NOT NULL,
+  file_path VARCHAR(500) NOT NULL,
+  file_type VARCHAR(50) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

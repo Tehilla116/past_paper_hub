@@ -1,0 +1,121 @@
+.papers-list {
+  animation: fadeIn 0.4s ease-out;
+}
+
+.paper-item {
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 20px 24px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  border-left: 4px solid var(--border);
+  transition: border-color 0.25s, box-shadow 0.25s;
+}
+
+.paper-item:hover {
+  border-left-color: var(--accent);
+  box-shadow: var(--shadow-hover);
+}
+
+.paper-year {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--accent);
+  min-width: 56px;
+  text-align: center;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.paper-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.paper-title {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--primary);
+  line-height: 1.3;
+  margin-bottom: 4px;
+}
+
+.paper-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.paper-exam-badge {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--accent);
+  background: var(--accent10);
+  padding: 2px 10px;
+  border-radius: 4px;
+}
+
+.paper-uploader {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.paper-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.download-link {
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--primary);
+  text-decoration: none;
+  padding: 8px 18px;
+  border: 1.5px solid var(--primary);
+  border-radius: 6px;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.download-link:hover {
+  background: var(--primary);
+  color: white;
+}
+
+.btn-delete {
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--muted);
+  background: none;
+  border: 1px solid var(--border);
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
+}
+
+.btn-delete:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--accent10);
+}
+
+@media (max-width: 640px) {
+  .paper-item { flex-wrap: wrap; gap: 12px; }
+  .paper-year { min-width: 44px; font-size: 1.1rem; }
+  .paper-actions { width: 100%; justify-content: flex-end; }
+}

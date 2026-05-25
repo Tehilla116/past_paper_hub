@@ -1,0 +1,31 @@
+- generic [ref=e3]:
+  - navigation [ref=e4]:
+    - generic [ref=e5]:
+      - link "Past Paper Hub" [ref=e6] [cursor=pointer]:
+        - /url: /
+      - generic [ref=e7]:
+        - link "Departments" [ref=e8] [cursor=pointer]:
+          - /url: /
+        - link "Upload" [ref=e9] [cursor=pointer]:
+          - /url: /upload
+        - link "Admin" [ref=e10] [cursor=pointer]:
+          - /url: /admin
+        - generic [ref=e11]:
+          - generic [ref=e12]: admin
+          - button "Logout" [ref=e13] [cursor=pointer]
+  - main [ref=e14]:
+    - generic [ref=e59]:
+      - navigation "Breadcrumb" [ref=e60]:
+        - link "Departments" [ref=e62] [cursor=pointer]:
+          - /url: /
+        - generic [ref=e63]:
+          - generic [ref=e64]: /
+          - link "School of Engineering" [ref=e65] [cursor=pointer]:
+            - /url: /departments/1/courses
+        - generic [ref=e66]:
+          - generic [ref=e67]: /
+          - generic [ref=e68]: Civil Engineering (CIV101)
+      - generic [ref=e69]:
+        - heading "Civil Engineering" [level=1] [ref=e70]
+        - paragraph [ref=e71]: CIV101 · School of Engineering
+      - paragraph [ref=e72]: No past papers uploaded for this course yet.
