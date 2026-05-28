@@ -1,0 +1,17 @@
+{
+  "name": "past-paper-hub",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build:client": "npm --prefix client run build",
+    "dev:client": "npm --prefix client run dev",
+    "dev:server": "npm --prefix server run dev"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "express": "^4.21.0",
+    "multer": "^1.4.5-lts.1",
+    "pg": "^8.13.0"
+  }
+}

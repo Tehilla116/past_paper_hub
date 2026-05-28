@@ -1,20 +1,10 @@
 import { Router } from 'express';
 import multer from 'multer';
 import path from 'path';
-import { fileURLToPath } from 'url';
 import pool from '../config/db.js';
 import { requireAuth, requireRole } from '../middleware/auth.js';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const uploadDir = path.join(__dirname, '..', 'uploads');
-
-const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => cb(null, uploadDir),
-  filename: (_req, file, cb) => {
-    const unique = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    cb(null, unique + '-' + file.originalname);
-  },
-});
+const storage = multer.memoryStorage();
 
 const upload = multer({
   storage,
@@ -31,6 +21,8 @@ const upload = multer({
 });
 
 const router = Router();
+
+router.use(requireAuth);
 
 router.get('/course/:courseId', requireAuth, async (req, res) => {
   try {
@@ -52,10 +44,12 @@ router.get('/course/:courseId', requireAuth, async (req, res) => {
 
 router.get('/:id/download', requireAuth, async (req, res) => {
   try {
-    const result = await pool.query('SELECT file_path, file_name FROM papers WHERE id = $1', [req.params.id]);
+    const result = await pool.query('SELECT file_data, file_name, file_type FROM papers WHERE id = $1', [req.params.id]);
     if (result.rows.length === 0) return res.status(404).json({ error: 'Paper not found' });
     const paper = result.rows[0];
-    res.download(paper.file_path, paper.file_name);
+    res.setHeader('Content-Disposition', `attachment; filename="${paper.file_name}"`);
+    res.type(paper.file_type || 'application/octet-stream');
+    res.send(Buffer.from(paper.file_data));
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error' });
@@ -68,9 +62,9 @@ router.post('/', requireRole('lecturer', 'admin'), upload.single('file'), async 
     const { course_id, title, year, exam_type } = req.body;
     const ext = path.extname(req.file.originalname).toLowerCase();
     const result = await pool.query(
-      `INSERT INTO papers (course_id, uploaded_by, title, year, exam_type, file_name, file_path, file_type)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
-      [course_id, req.session.userId, title, year, exam_type, req.file.originalname, req.file.path, ext]
+      `INSERT INTO papers (course_id, uploaded_by, title, year, exam_type, file_name, file_type, file_data, file_path)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
+      [course_id, req.user.id, title, year, exam_type, req.file.originalname, req.file.mimetype || ext, req.file.buffer, `db://papers/${Date.now()}-${req.file.originalname}`]
     );
     res.status(201).json(result.rows[0]);
   } catch (err) {

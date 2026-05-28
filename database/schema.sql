@@ -33,5 +33,6 @@ CREATE TABLE papers (
   file_name VARCHAR(255) NOT NULL,
   file_path VARCHAR(500) NOT NULL,
   file_type VARCHAR(50) NOT NULL,
+  file_data BYTEA NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

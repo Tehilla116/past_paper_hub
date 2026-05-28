@@ -49,6 +49,54 @@ npm run dev
 
 Navigate to `http://localhost:5173`
 
+## Deploy to Vercel
+
+This repository now supports a single Vercel deployment for both the React client and the API.
+
+### 1. Prepare the Database
+
+Create or update your PostgreSQL database using `database/schema.sql`.
+
+If you already have a database, make sure the `papers` table has a `file_data BYTEA NOT NULL` column.
+
+### 2. Set Environment Variables in Vercel
+
+Add these variables in the Vercel project settings:
+
+- `DATABASE_URL`
+- `SESSION_SECRET`
+- `CLIENT_ORIGIN` if you use a custom domain
+
+### 3. Import the Repository into Vercel
+
+- Framework preset: Other
+- Root directory: repository root
+- Build command: handled by `vercel.json`
+- Output directory: `client/dist`
+
+### 4. Deploy
+
+Vercel will:
+
+- install root dependencies for the API
+- install client dependencies
+- build the Vite app
+- serve the API from `/api/*`
+- serve the React SPA with route rewrites
+
+### 5. Verify
+
+- Open the Vercel URL
+- Log in and register
+- Browse departments and courses
+- Upload and download a paper
+
+### Notes
+
+- The backend now uses signed cookies instead of server sessions.
+- Uploaded papers are stored in PostgreSQL, not on local disk.
+- Relative `/api/*` calls from the client continue to work on Vercel.
+
 ## Seed Accounts
 
 | Role     | Email                 | Password    |

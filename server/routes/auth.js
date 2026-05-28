@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import pool from '../config/db.js';
+import { createSessionToken, getAuthCookieName, getAuthCookieOptions } from '../lib/session.js';
 
 const router = Router();
 
@@ -16,8 +17,11 @@ router.post('/register', async (req, res) => {
       `INSERT INTO users (name, email, password_hash, role) VALUES ($1, $2, $3, 'student') RETURNING id, name, email, role`,
       [name, email, password_hash]
     );
-    req.session.userId = result.rows[0].id;
-    req.session.userRole = result.rows[0].role;
+    res.cookie(
+      getAuthCookieName(),
+      createSessionToken({ userId: result.rows[0].id, userRole: result.rows[0].role }),
+      getAuthCookieOptions()
+    );
     res.status(201).json(result.rows[0]);
   } catch (err) {
     console.error(err);
@@ -37,8 +41,11 @@ router.post('/login', async (req, res) => {
     if (!valid) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
-    req.session.userId = user.id;
-    req.session.userRole = user.role;
+    res.cookie(
+      getAuthCookieName(),
+      createSessionToken({ userId: user.id, userRole: user.role }),
+      getAuthCookieOptions()
+    );
     res.json({ id: user.id, name: user.name, email: user.email, role: user.role });
   } catch (err) {
     console.error(err);
@@ -47,20 +54,19 @@ router.post('/login', async (req, res) => {
 });
 
 router.post('/logout', (req, res) => {
-  req.session.destroy((err) => {
-    if (err) return res.status(500).json({ error: 'Logout failed' });
-    res.clearCookie('connect.sid');
-    res.json({ message: 'Logged out' });
-  });
+  res.clearCookie(getAuthCookieName(), { path: '/' });
+  res.json({ message: 'Logged out' });
 });
 
 router.get('/me', (req, res) => {
-  if (!req.session.userId) {
+  if (!req.user) {
     return res.status(401).json({ error: 'Not authenticated' });
   }
   res.json({
-    id: req.session.userId,
-    role: req.session.userRole,
+    id: req.user.id,
+    name: req.user.name,
+    email: req.user.email,
+    role: req.user.role,
   });
 });
 

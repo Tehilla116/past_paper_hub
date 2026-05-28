@@ -4,6 +4,8 @@ import { requireAuth, requireRole } from '../middleware/auth.js';
 
 const router = Router();
 
+router.use(requireAuth);
+
 router.get('/', requireAuth, async (req, res) => {
   try {
     const result = await pool.query('SELECT id, name, slug FROM departments ORDER BY name');

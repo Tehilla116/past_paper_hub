@@ -4,6 +4,8 @@ import { requireAuth, requireRole } from '../middleware/auth.js';
 
 const router = Router({ mergeParams: true });
 
+router.use(requireAuth);
+
 router.get('/', requireAuth, async (req, res) => {
   try {
     const { departmentId } = req.params;
