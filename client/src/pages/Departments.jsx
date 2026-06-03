@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { api } from '../api.js';
 import './Departments.css';
 
 export default function Departments() {
@@ -7,7 +8,7 @@ export default function Departments() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/api/departments', { credentials: 'include' })
+    api('/api/departments')
       .then(r => r.json())
       .then(data => {
         setDepartments(data);

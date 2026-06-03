@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { api } from '../api.js';
 import './Homepage.css';
 
 export default function Homepage({ user }) {
@@ -9,8 +10,8 @@ export default function Homepage({ user }) {
 
   useEffect(() => {
     Promise.all([
-      fetch('/api/departments', { credentials: 'include' }).then(r => r.json()),
-      fetch('/api/courses', { credentials: 'include' }).then(r => r.json()),
+      api('/api/departments').then(r => r.json()),
+      api('/api/courses').then(r => r.json()),
     ])
       .then(([depts, crs]) => {
         setDepartments(depts);

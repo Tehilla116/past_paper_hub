@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import { api, apiUrl } from '../api.js';
 import Breadcrumbs from '../components/Breadcrumbs.jsx';
 import './Papers.css';
 
@@ -10,7 +11,7 @@ export default function Papers({ user }) {
   const [loading, setLoading] = useState(true);
 
   const fetchPapers = () => {
-    fetch(`/api/papers/course/${courseId}`, { credentials: 'include' })
+    api(`/api/papers/course/${courseId}`)
       .then(r => r.json())
       .then(data => {
         setPapers(data);
@@ -20,7 +21,7 @@ export default function Papers({ user }) {
   };
 
   useEffect(() => {
-    fetch(`/api/courses/${courseId}`, { credentials: 'include' })
+    api(`/api/courses/${courseId}`)
       .then(r => r.json())
       .then(data => setCourse(data))
       .catch(() => {});
@@ -29,7 +30,7 @@ export default function Papers({ user }) {
 
   const handleDelete = async (id) => {
     if (!confirm('Delete this paper?')) return;
-    await fetch(`/api/papers/${id}`, { method: 'DELETE', credentials: 'include' });
+    await api(`/api/papers/${id}`, { method: 'DELETE' });
     fetchPapers();
   };
 
@@ -67,7 +68,7 @@ export default function Papers({ user }) {
                 </div>
               </div>
               <div className="paper-actions">
-                <a href={`/api/papers/${paper.id}/download`} className="download-link">Download</a>
+                <a href={apiUrl(`/api/papers/${paper.id}/download`)} className="download-link">Download</a>
                 {canManage && (
                   <button onClick={() => handleDelete(paper.id)} className="btn-delete">Delete</button>
                 )}

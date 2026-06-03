@@ -1,11 +1,12 @@
 import { Link, useNavigate } from 'react-router-dom';
+import { api } from '../api.js';
 import './Navbar.css';
 
 export default function Navbar({ user, setUser }) {
   const navigate = useNavigate();
 
   const handleLogout = async () => {
-    await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+    await api('/api/auth/logout', { method: 'POST' });
     setUser(null);
     navigate('/login');
   };

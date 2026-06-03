@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { api } from '../api.js';
 import './Login.css';
 
 export default function Register({ setUser }) {
@@ -13,10 +14,8 @@ export default function Register({ setUser }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    const res = await fetch('/api/auth/register', {
+    const res = await api('/api/auth/register', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
       body: JSON.stringify({ name, email, password }),
     });
     const data = await res.json();

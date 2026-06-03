@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import { api } from '../api.js';
 import Breadcrumbs from '../components/Breadcrumbs.jsx';
 import './Departments.css';
 import './Courses.css';
@@ -11,7 +12,7 @@ export default function Courses() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`/api/departments/${departmentId}/courses`, { credentials: 'include' })
+    api(`/api/departments/${departmentId}/courses`)
       .then(r => r.json())
       .then(data => {
         setCourses(data);
@@ -19,7 +20,7 @@ export default function Courses() {
       })
       .catch(() => setLoading(false));
 
-    fetch('/api/departments', { credentials: 'include' })
+    api('/api/departments')
       .then(r => r.json())
       .then(data => {
         const dept = data.find(d => d.id === Number(departmentId));

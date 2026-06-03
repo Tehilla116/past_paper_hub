@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { api } from '../api.js';
 import './UploadPaper.css';
 
 export default function UploadPaper() {
@@ -14,7 +15,7 @@ export default function UploadPaper() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    fetch('/api/departments', { credentials: 'include' })
+    api('/api/departments')
       .then(r => r.json())
       .then(data => setDepartments(data))
       .catch(() => {});
@@ -22,7 +23,7 @@ export default function UploadPaper() {
 
   useEffect(() => {
     if (!departmentId) return setCourses([]);
-    fetch(`/api/departments/${departmentId}/courses`, { credentials: 'include' })
+    api(`/api/departments/${departmentId}/courses`)
       .then(r => r.json())
       .then(data => setCourses(data))
       .catch(() => {});
@@ -39,9 +40,8 @@ export default function UploadPaper() {
     formData.append('year', year);
     formData.append('exam_type', examType);
     formData.append('file', file);
-    const res = await fetch('/api/papers', {
+    const res = await api('/api/papers', {
       method: 'POST',
-      credentials: 'include',
       body: formData,
     });
     const data = await res.json();

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { api } from './api.js';
 import Navbar from './components/Navbar.jsx';
 import Login from './pages/Login.jsx';
 import Register from './pages/Register.jsx';
@@ -8,7 +9,6 @@ import Courses from './pages/Courses.jsx';
 import Papers from './pages/Papers.jsx';
 import UploadPaper from './pages/UploadPaper.jsx';
 import AdminPanel from './pages/AdminPanel.jsx';
-import Homepage from './pages/Homepage.jsx';
 import './App.css';
 
 export default function App() {
@@ -16,7 +16,7 @@ export default function App() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/api/auth/me', { credentials: 'include' })
+    api('/api/auth/me')
       .then(r => r.ok ? r.json() : null)
       .then(data => {
         if (data && data.id) {

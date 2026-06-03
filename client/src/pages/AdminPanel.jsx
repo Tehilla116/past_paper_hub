@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { api } from '../api.js';
 import './AdminPanel.css';
 
 export default function AdminPanel() {
@@ -16,21 +17,21 @@ export default function AdminPanel() {
   const [editingCourse, setEditingCourse] = useState(null);
 
   const fetchUsers = () => {
-    fetch('/api/users', { credentials: 'include' })
+    api('/api/users')
       .then(r => r.json())
       .then(data => setUsers(data))
       .catch(() => {});
   };
 
   const fetchDepartments = () => {
-    fetch('/api/departments', { credentials: 'include' })
+    api('/api/departments')
       .then(r => r.json())
       .then(data => setDepartments(data))
       .catch(() => {});
   };
 
   const fetchCourses = () => {
-    fetch('/api/courses', { credentials: 'include' })
+    api('/api/courses')
       .then(r => r.json())
       .then(data => setCourses(data))
       .catch(() => {});
@@ -39,7 +40,7 @@ export default function AdminPanel() {
   useEffect(() => { fetchUsers(); fetchDepartments(); fetchCourses(); }, []);
 
   const handleRoleChange = async (userId, role) => {
-    await fetch(`/api/users/${userId}/role`, {
+    await api(`/api/users/${userId}/role`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
@@ -50,7 +51,7 @@ export default function AdminPanel() {
 
   const handleDeactivate = async (userId) => {
     if (!confirm('Deactivate this user?')) return;
-    await fetch(`/api/users/${userId}/deactivate`, {
+    await api(`/api/users/${userId}/deactivate`, {
       method: 'PUT',
       credentials: 'include',
     });
@@ -60,14 +61,14 @@ export default function AdminPanel() {
   const handleDeptSubmit = async (e) => {
     e.preventDefault();
     if (editingDept) {
-      await fetch(`/api/departments/${editingDept}`, {
+      await api(`/api/departments/${editingDept}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({ name: deptName, slug: deptSlug }),
       });
     } else {
-      await fetch('/api/departments', {
+      await api('/api/departments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -81,7 +82,7 @@ export default function AdminPanel() {
   const handleCourseSubmit = async (e) => {
     e.preventDefault();
     if (editingCourse) {
-      await fetch(`/api/courses/${editingCourse}`, {
+      await api(`/api/courses/${editingCourse}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -90,7 +91,7 @@ export default function AdminPanel() {
         }),
       });
     } else {
-      await fetch('/api/courses', {
+      await api('/api/courses', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
