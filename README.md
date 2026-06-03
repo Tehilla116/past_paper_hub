@@ -57,142 +57,85 @@ Open `http://localhost:5173`
 
 ---
 
-## 1. Deploy the Database (Dokploy)
+## 1. Deploy Backend + Database (Dokploy with Docker Compose)
 
-This must be done **first** — the backend needs a database to connect to.
+A `docker-compose.yml` is included at the project root. This bundles both the Express backend and PostgreSQL into one stack.
 
-### Step 1: Create a PostgreSQL service in Dokploy
-
-1. Log into your Dokploy dashboard
-2. Click **"Create a new project"** → give it a name (e.g. `past-paper-hub`)
-3. Inside the project, click **"Databases"** → **"Create Database"**
-4. Choose **PostgreSQL** and fill in:
-   - **Database name:** `past_paper_hub`
-   - **User:** `postgres` (or whatever you prefer)
-   - **Password:** type a password and **save it somewhere**
-5. Click **Create**. Dokploy will spin up a PostgreSQL container.
-6. Once it's running, click on the database service to see its details. Note the **internal hostname** — it's usually the service name you gave it, e.g. `postgres` (this is the Docker DNS name other containers use to reach it).
-
-### Step 2: Run the schema against it
-
-From your local machine (with `psql` installed), connect using the Dokploy database's **external** connection string:
-
-```bash
-psql "postgresql://postgres:YOUR_PASSWORD@YOUR_DOKPLOY_IP:5432/past_paper_hub" -f database/schema.sql
-```
-
-You can get the external IP and port from the Dokploy database service details page.
-
----
-
-## 2. Deploy the Backend (Dokploy)
-
-### Step 1: Add the backend service
-
-1. In your same Dokploy project, click **"Services"** → **"Create Service"**
-2. Choose **"Docker"** and connect your GitHub repository
-3. Set the following:
-
-| Setting | Value |
-|---------|-------|
-| Service name | `server` |
-| Dockerfile path | `server/Dockerfile` |
-| Port | `3001` |
-| Protocol | HTTP |
-
-### Step 2: Add environment variables
-
-In the **Environment** section, add:
-
-| Variable | Value |
-|----------|-------|
-| `DATABASE_URL` | `postgresql://postgres:YOUR_PASSWORD@postgres:5432/past_paper_hub` |
-| `PORT` | `3001` |
-| `SESSION_SECRET` | (generate a random string — e.g. `openssl rand -hex 32`) |
-
-**Important:** The hostname `postgres` in the DATABASE_URL is the **Docker internal hostname** of your Dokploy PostgreSQL service (not your local machine). If you named the database service something else, use that name instead.
-
-### Step 3: Deploy
-
-Click **"Deploy"**. Dokploy will build the Docker image from `server/Dockerfile`, start the container, and connect it to the database.
-
-Once deployed, note the **URL** Dokploy gives you (e.g. `https://server-your-project.dokploy.app` or an IP:port). You'll need this for the frontend.
-
----
-
-## 3. Deploy the Frontend (Cloudflare Pages)
-
-### Step 1: Push your repo to GitHub
+### Step 1: Push to GitHub
 
 ```bash
 git push origin main
 ```
 
-### Step 2: Connect Cloudflare to your GitHub repo
+### Step 2: Import the stack into Dokploy
+
+1. Log into your Dokploy dashboard
+2. Click **"Create a new project"** → name it `past-paper-hub`
+3. Go to **"Compose"** → **"Import Compose"**
+4. Connect your GitHub repo and select the `docker-compose.yml` file
+5. Add these **environment variables** (they fill in the `${}` placeholders in the compose file):
+
+| Variable | Value |
+|----------|-------|
+| `DB_PASSWORD` | Choose a strong password |
+| `SESSION_SECRET` | Run `openssl rand -hex 32` and paste the output |
+
+6. Click **"Deploy"**
+
+Dokploy will:
+- Spin up **PostgreSQL 16** with the schema automatically applied
+- Build and start the **Express backend** (waits for the database to be healthy)
+- Attach persistent volumes so data and uploads survive restarts
+
+Your backend will be available at the URL Dokploy assigns it.
+
+---
+
+## 2. Deploy the Frontend (Cloudflare Pages)
+
+### Step 1: Connect Cloudflare to GitHub
 
 1. Go to [dash.cloudflare.com](https://dash.cloudflare.com) → **Pages**
-2. Click **"Connect to Git"** → choose your GitHub repo
-3. Click **"Begin setup"**
+2. Click **"Connect to Git"** → select your repo → **"Begin setup"**
 
-### Step 3: Configure build settings
-
-Set these exactly:
+### Step 2: Configure build settings
 
 | Setting | Value |
 |---------|-------|
 | **Build command** | `cd client && npm install && npm run build` |
 | **Build output** | `client/dist` |
-| **Root directory** | (leave blank — keep default) |
 
-### Step 4: Deploy
+### Step 3: Deploy
 
-Click **"Save and Deploy"**. Cloudflare will build and publish your site.
+Click **"Save and Deploy"**. Once done, you'll get a URL like `https://your-project.pages.dev`.
 
-Once done, you'll get a URL like `https://your-project.pages.dev`.
+### Step 4: Point the frontend to your backend
 
-### Step 5: Point the frontend to your backend
+The `vite.config.js` already supports a `VITE_API_URL` environment variable for production.
 
-Your local `vite.config.js` proxies `/api` to `localhost:3001` for development. On Cloudflare, you need the frontend to call your Dokploy backend instead.
-
-**Option A — Update the proxy URL (recommended for now):**
-
-In `client/vite.config.js`, change the proxy target to your Dokploy backend URL:
-
-```js
-server: {
-  proxy: {
-    '/api': {
-      target: 'https://server-your-project.dokploy.app',
-      changeOrigin: true,
-    },
-  },
-},
-```
-
-Then rebuild and redeploy on Cloudflare Pages.
-
-**Option B — Use an environment variable (more flexible):**
-
-Replace the proxy config with:
-
-```js
-server: {
-  proxy: {
-    '/api': {
-      target: process.env.VITE_API_URL || 'http://localhost:3001',
-      changeOrigin: true,
-    },
-  },
-},
-```
-
-Then in Cloudflare Pages → your project → **Settings** → **Environment variables**, add:
+In Cloudflare Pages → your project → **Settings** → **Environment variables** → **Add variable**:
 
 | Variable | Value |
 |----------|-------|
-| `VITE_API_URL` | `https://server-your-project.dokploy.app` |
+| `VITE_API_URL` | `https://your-dokploy-backend-url.com` |
 
-Add this to both **Production** and **Preview** environments. Redeploy. No code changes needed next time.
+Add it for **Production**, then go to the **Deployments** tab and redeploy. Done.
+
+---
+
+## Local Development with Docker Compose
+
+Same compose file works locally — no Dokploy needed:
+
+```bash
+docker compose up --build
+```
+
+This starts PostgreSQL on port 5432 and the backend on port 3001. The frontend still runs separately:
+
+```bash
+cd client && npm run dev
+```
 
 ## Seed Accounts
 
