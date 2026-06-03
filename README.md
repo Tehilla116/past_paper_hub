@@ -2,7 +2,7 @@
 
 A full-stack web application for browsing, uploading, and managing past examination papers at Zambia University of Technology.
 
-**Frontend:** React.js (hosted on Cloudflare Pages) · **Backend:** Express.js · **Database:** PostgreSQL / Supabase
+**Frontend:** React.js (Cloudflare Pages) · **Backend:** Express.js (Dokploy) · **Database:** PostgreSQL (Dokploy)
 
 ## Features
 
@@ -16,11 +16,9 @@ A full-stack web application for browsing, uploading, and managing past examinat
 ### Prerequisites
 
 - Node.js 18+
-- PostgreSQL 16+ (local) — or a Supabase project
+- PostgreSQL 16+ (local development)
 
-### 1. Database Setup
-
-**Option A — Local PostgreSQL:**
+### 1. Local Database Setup
 
 ```bash
 initdb -D /tmp/pg_data --username=your_user --auth=trust
@@ -29,21 +27,12 @@ createdb -h /tmp -p 5435 past_paper_hub
 psql -h /tmp -p 5435 -d past_paper_hub -f database/schema.sql
 ```
 
-**Option B — Supabase (recommended for persistence):**
-
-1. Create a project at [supabase.com](https://supabase.com)
-2. Go to Project Settings → Database → Connection string
-3. Copy the connection string (starts with `postgresql://...`)
-4. Run the schema against it:
-   ```bash
-   psql "$YOUR_SUPABASE_CONNECTION_STRING" -f database/schema.sql
-   ```
-
 ### 2. Seed the Database
 
+Run the seed script (generates bcrypt hashes and inserts sample data) or manually insert:
+
 ```bash
-# Generate a bcrypt hash for "password123" and run the INSERT
-# or use your Supabase SQL editor to run database/seed.sql
+psql -h /tmp -p 5435 -d past_paper_hub -f database/seed.sql
 ```
 
 ### 3. Start the Backend
@@ -51,12 +40,7 @@ psql -h /tmp -p 5435 -d past_paper_hub -f database/schema.sql
 ```bash
 cd server
 npm install
-
-# For local Postgres (uses /tmp socket):
 npm run dev
-
-# For Supabase (uses DATABASE_URL env var):
-DATABASE_URL="postgresql://..." npm run dev
 ```
 
 ### 4. Start the Frontend
@@ -69,32 +53,44 @@ npm run dev
 
 Open `http://localhost:5173`
 
-## Deploying the Frontend — Cloudflare Pages
+## Deploying
+
+### Frontend — Cloudflare Pages
 
 1. Push your repo to GitHub
-2. In Cloudflare Dashboard → Pages → Connect to Git → select your repo
+2. Cloudflare Dashboard → Pages → Connect to Git → select your repo
 3. **Build command:** `cd client && npm install && npm run build`
 4. **Build output:** `client/dist`
 5. Deploy
 
-## Deploying the Backend — Dokploy
+### Backend — Dokploy
 
-The backend has a `server/Dockerfile` ready for Dokploy.
+The `server/Dockerfile` is ready for Dokploy.
 
 1. In Dokploy, create a new project and connect your GitHub repo
 2. Set **Dockerfile path** to `server/Dockerfile`
 3. Set **Port** to `3001`
-4. Add environment variables:
+
+### Database — Dokploy PostgreSQL
+
+1. In your Dokploy project, add a **PostgreSQL** database service
+2. Note the internal hostname (usually `postgres`) and credentials
+3. Add these environment variables to your backend service:
 
 | Variable | Value |
 |---|---|
-| `DATABASE_URL` | Your Supabase connection string |
+| `DATABASE_URL` | `postgresql://user:password@postgres:5432/past_paper_hub` |
 | `PORT` | `3001` |
 | `SESSION_SECRET` | A random secret string |
 
-5. Deploy
+4. Run the schema against the Dokploy database:
+   ```bash
+   psql "$DATABASE_URL" -f database/schema.sql
+   ```
 
-Once deployed, update `client/vite.config.js` to proxy `/api` to your Dokploy backend URL instead of `localhost:3001`.
+5. Deploy the backend
+
+Once deployed, update `client/vite.config.js` to proxy `/api` to your Dokploy backend URL.
 
 ## Seed Accounts
 
@@ -106,6 +102,6 @@ Once deployed, update `client/vite.config.js` to proxy `/api` to your Dokploy ba
 
 ## Tech Stack
 
-- **Frontend:** React 18, React Router, Vite, Pure CSS — hosted on Cloudflare Pages
-- **Backend:** Express.js, multer, bcryptjs
-- **Database:** PostgreSQL (local or Supabase)
+- **Frontend:** React 18, React Router, Vite, Pure CSS — Cloudflare Pages
+- **Backend:** Express.js, multer, bcryptjs — Dokploy
+- **Database:** PostgreSQL — Dokploy
