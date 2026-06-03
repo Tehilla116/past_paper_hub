@@ -31,7 +31,7 @@ export default function Register({ setUser }) {
         <h1>Create account</h1>
         <form onSubmit={handleSubmit}>
           <input type="text" placeholder="Full name" value={name} onChange={e => setName(e.target.value)} required />
-          <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required />
+          <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required pattern="[^\s@]+@[^\s@]+\.[^\s@]+" title="Enter a valid email address" />
           <div className="password-wrapper">
             <input type={showPassword ? 'text' : 'password'} placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} required minLength={6} />
             <button type="button" className="toggle-password" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? 'Hide password' : 'Show password'}>
