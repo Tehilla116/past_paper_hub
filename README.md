@@ -69,26 +69,32 @@ npm run dev
 
 Open `http://localhost:5173`
 
-## Deploying to Cloudflare Pages
-
-### Via Dashboard (easiest)
+## Deploying the Frontend — Cloudflare Pages
 
 1. Push your repo to GitHub
-2. In Cloudflare Dashboard → Pages → Connect to Git
-3. Select your repo
-4. Set build settings:
-   - **Build command:** `cd client && npm install && npm run build`
-   - **Build output:** `client/dist`
+2. In Cloudflare Dashboard → Pages → Connect to Git → select your repo
+3. **Build command:** `cd client && npm install && npm run build`
+4. **Build output:** `client/dist`
 5. Deploy
 
-### Via Wrangler CLI
+## Deploying the Backend — Dokploy
 
-```bash
-npm install -g wrangler
-wrangler pages deploy client/dist --branch main
-```
+The backend has a `server/Dockerfile` ready for Dokploy.
 
-Your frontend will be live at `https://your-project.pages.dev`. Update the Vite proxy in `client/vite.config.js` to point to your deployed backend URL in production.
+1. In Dokploy, create a new project and connect your GitHub repo
+2. Set **Dockerfile path** to `server/Dockerfile`
+3. Set **Port** to `3001`
+4. Add environment variables:
+
+| Variable | Value |
+|---|---|
+| `DATABASE_URL` | Your Supabase connection string |
+| `PORT` | `3001` |
+| `SESSION_SECRET` | A random secret string |
+
+5. Deploy
+
+Once deployed, update `client/vite.config.js` to proxy `/api` to your Dokploy backend URL instead of `localhost:3001`.
 
 ## Seed Accounts
 
