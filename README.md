@@ -53,44 +53,146 @@ npm run dev
 
 Open `http://localhost:5173`
 
-## Deploying
+## Deployment Guide
 
-### Frontend — Cloudflare Pages
+---
 
-1. Push your repo to GitHub
-2. Cloudflare Dashboard → Pages → Connect to Git → select your repo
-3. **Build command:** `cd client && npm install && npm run build`
-4. **Build output:** `client/dist`
-5. Deploy
+## 1. Deploy the Database (Dokploy)
 
-### Backend — Dokploy
+This must be done **first** — the backend needs a database to connect to.
 
-The `server/Dockerfile` is ready for Dokploy.
+### Step 1: Create a PostgreSQL service in Dokploy
 
-1. In Dokploy, create a new project and connect your GitHub repo
-2. Set **Dockerfile path** to `server/Dockerfile`
-3. Set **Port** to `3001`
+1. Log into your Dokploy dashboard
+2. Click **"Create a new project"** → give it a name (e.g. `past-paper-hub`)
+3. Inside the project, click **"Databases"** → **"Create Database"**
+4. Choose **PostgreSQL** and fill in:
+   - **Database name:** `past_paper_hub`
+   - **User:** `postgres` (or whatever you prefer)
+   - **Password:** type a password and **save it somewhere**
+5. Click **Create**. Dokploy will spin up a PostgreSQL container.
+6. Once it's running, click on the database service to see its details. Note the **internal hostname** — it's usually the service name you gave it, e.g. `postgres` (this is the Docker DNS name other containers use to reach it).
 
-### Database — Dokploy PostgreSQL
+### Step 2: Run the schema against it
 
-1. In your Dokploy project, add a **PostgreSQL** database service
-2. Note the internal hostname (usually `postgres`) and credentials
-3. Add these environment variables to your backend service:
+From your local machine (with `psql` installed), connect using the Dokploy database's **external** connection string:
+
+```bash
+psql "postgresql://postgres:YOUR_PASSWORD@YOUR_DOKPLOY_IP:5432/past_paper_hub" -f database/schema.sql
+```
+
+You can get the external IP and port from the Dokploy database service details page.
+
+---
+
+## 2. Deploy the Backend (Dokploy)
+
+### Step 1: Add the backend service
+
+1. In your same Dokploy project, click **"Services"** → **"Create Service"**
+2. Choose **"Docker"** and connect your GitHub repository
+3. Set the following:
+
+| Setting | Value |
+|---------|-------|
+| Service name | `server` |
+| Dockerfile path | `server/Dockerfile` |
+| Port | `3001` |
+| Protocol | HTTP |
+
+### Step 2: Add environment variables
+
+In the **Environment** section, add:
 
 | Variable | Value |
-|---|---|
-| `DATABASE_URL` | `postgresql://user:password@postgres:5432/past_paper_hub` |
+|----------|-------|
+| `DATABASE_URL` | `postgresql://postgres:YOUR_PASSWORD@postgres:5432/past_paper_hub` |
 | `PORT` | `3001` |
-| `SESSION_SECRET` | A random secret string |
+| `SESSION_SECRET` | (generate a random string — e.g. `openssl rand -hex 32`) |
 
-4. Run the schema against the Dokploy database:
-   ```bash
-   psql "$DATABASE_URL" -f database/schema.sql
-   ```
+**Important:** The hostname `postgres` in the DATABASE_URL is the **Docker internal hostname** of your Dokploy PostgreSQL service (not your local machine). If you named the database service something else, use that name instead.
 
-5. Deploy the backend
+### Step 3: Deploy
 
-Once deployed, update `client/vite.config.js` to proxy `/api` to your Dokploy backend URL.
+Click **"Deploy"**. Dokploy will build the Docker image from `server/Dockerfile`, start the container, and connect it to the database.
+
+Once deployed, note the **URL** Dokploy gives you (e.g. `https://server-your-project.dokploy.app` or an IP:port). You'll need this for the frontend.
+
+---
+
+## 3. Deploy the Frontend (Cloudflare Pages)
+
+### Step 1: Push your repo to GitHub
+
+```bash
+git push origin main
+```
+
+### Step 2: Connect Cloudflare to your GitHub repo
+
+1. Go to [dash.cloudflare.com](https://dash.cloudflare.com) → **Pages**
+2. Click **"Connect to Git"** → choose your GitHub repo
+3. Click **"Begin setup"**
+
+### Step 3: Configure build settings
+
+Set these exactly:
+
+| Setting | Value |
+|---------|-------|
+| **Build command** | `cd client && npm install && npm run build` |
+| **Build output** | `client/dist` |
+| **Root directory** | (leave blank — keep default) |
+
+### Step 4: Deploy
+
+Click **"Save and Deploy"**. Cloudflare will build and publish your site.
+
+Once done, you'll get a URL like `https://your-project.pages.dev`.
+
+### Step 5: Point the frontend to your backend
+
+Your local `vite.config.js` proxies `/api` to `localhost:3001` for development. On Cloudflare, you need the frontend to call your Dokploy backend instead.
+
+**Option A — Update the proxy URL (recommended for now):**
+
+In `client/vite.config.js`, change the proxy target to your Dokploy backend URL:
+
+```js
+server: {
+  proxy: {
+    '/api': {
+      target: 'https://server-your-project.dokploy.app',
+      changeOrigin: true,
+    },
+  },
+},
+```
+
+Then rebuild and redeploy on Cloudflare Pages.
+
+**Option B — Use an environment variable (more flexible):**
+
+Replace the proxy config with:
+
+```js
+server: {
+  proxy: {
+    '/api': {
+      target: process.env.VITE_API_URL || 'http://localhost:3001',
+      changeOrigin: true,
+    },
+  },
+},
+```
+
+Then in Cloudflare Pages → your project → **Settings** → **Environment variables**, add:
+
+| Variable | Value |
+|----------|-------|
+| `VITE_API_URL` | `https://server-your-project.dokploy.app` |
+
+Add this to both **Production** and **Preview** environments. Redeploy. No code changes needed next time.
 
 ## Seed Accounts
 
