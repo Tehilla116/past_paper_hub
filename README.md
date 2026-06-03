@@ -75,10 +75,11 @@ git push origin main
 4. Connect your GitHub repo and select the `docker-compose.yml` file
 5. Add these **environment variables** (they fill in the `${}` placeholders in the compose file):
 
-| Variable | Value |
-|----------|-------|
-| `DB_PASSWORD` | Choose a strong password |
-| `SESSION_SECRET` | Run `openssl rand -hex 32` and paste the output |
+| Variable | Value | Why |
+|----------|-------|-----|
+| `DB_PASSWORD` | Choose a strong password | PostgreSQL password |
+| `SESSION_SECRET` | Run `openssl rand -hex 32` and paste | Signs session cookies |
+| `CLIENT_ORIGIN` | Your Cloudflare Pages URL (e.g. `https://past-paper-hub.pages.dev`) | Tells the backend which frontend URL is allowed via CORS |
 
 6. Click **"Deploy"**
 
@@ -111,15 +112,15 @@ Click **"Save and Deploy"**. Once done, you'll get a URL like `https://your-proj
 
 ### Step 4: Point the frontend to your backend
 
-The `vite.config.js` already supports a `VITE_API_URL` environment variable for production.
+The frontend uses `import.meta.env.VITE_API_URL` as the base for all API calls. In Cloudflare Pages, set it as a build-time environment variable.
 
-In Cloudflare Pages → your project → **Settings** → **Environment variables** → **Add variable**:
+Go to Cloudflare Pages → your project → **Settings** → **Environment variables** → **Add variable**:
 
 | Variable | Value |
 |----------|-------|
-| `VITE_API_URL` | `https://your-dokploy-backend-url.com` |
+| `VITE_API_URL` | `https://your-dokploy-backend-url.com` (no trailing slash) |
 
-Add it for **Production**, then go to the **Deployments** tab and redeploy. Done.
+Add it for **Production**, then go to the **Deployments** tab and click **"Retry deployment"** on the latest deployment. Cloudflare will rebuild with that URL baked in.
 
 ---
 

@@ -13,6 +13,7 @@ const app = express();
 const allowedOrigins = new Set(
   [
     'http://localhost:5173',
+    'http://localhost:5174',
     process.env.CLIENT_ORIGIN,
     process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null,
   ].filter(Boolean)
@@ -24,6 +25,7 @@ app.use(cors({
     if (!origin || allowedOrigins.has(origin)) {
       return callback(null, true);
     }
+    console.warn(`CORS blocked origin: ${origin}`);
     return callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
@@ -44,6 +46,9 @@ app.use((err, _req, res, _next) => {
   }
   if (err.code === 'LIMIT_FILE_SIZE') {
     return res.status(400).json({ error: 'File too large. Maximum size is 10MB.' });
+  }
+  if (err.message === 'Not allowed by CORS') {
+    return res.status(403).json({ error: 'CORS not allowed. Set CLIENT_ORIGIN on the server to match your frontend URL.' });
   }
   console.error(err);
   res.status(500).json({ error: 'Server error' });

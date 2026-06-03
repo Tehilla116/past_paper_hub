@@ -23,6 +23,8 @@ services:
       - "${PORT:-3001}:3001"
     environment:
       DATABASE_URL: postgresql://postgres:${DB_PASSWORD:-changeme}@postgres:5432/past_paper_hub
+      CLIENT_ORIGIN: ${CLIENT_ORIGIN}
+      NODE_ENV: production
       PORT: 3001
       SESSION_SECRET: ${SESSION_SECRET:-change-me-in-production}
     depends_on:
