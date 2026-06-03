@@ -1,40 +1,62 @@
 # Past Paper Hub
 
-A full-stack web application for browsing, uploading, and managing past examination papers. Built with **React.js**, **Express.js**, and **PostgreSQL**.
+A full-stack web application for browsing, uploading, and managing past examination papers at Zambia University of Technology.
+
+**Frontend:** React.js (hosted on Cloudflare Pages) · **Backend:** Express.js · **Database:** PostgreSQL / Supabase
 
 ## Features
 
 - Three roles: **Student** (view/download), **Lecturer** (upload/manage), **Admin** (full system control)
-- Browse papers by Department → Course → Year hierarchy
+- Browse papers by School → Course → Year hierarchy
 - Upload and download PDF, DOC, DOCX, PNG, JPG files
-- Admin panel for managing departments, courses, and users
+- Admin panel for managing schools, courses, and users
 
 ## Quick Start
 
 ### Prerequisites
 
 - Node.js 18+
-- PostgreSQL 16+
+- PostgreSQL 16+ (local) — or a Supabase project
 
 ### 1. Database Setup
 
+**Option A — Local PostgreSQL:**
+
 ```bash
-# Create the database and tables
-psql -U postgres -c "CREATE DATABASE past_paper_hub;"
-psql -U postgres -d past_paper_hub -f database/schema.sql
-psql -U postgres -d past_paper_hub -f database/seed.sql
+initdb -D /tmp/pg_data --username=your_user --auth=trust
+pg_ctl -D /tmp/pg_data -o "-p 5435 -k /tmp" start
+createdb -h /tmp -p 5435 past_paper_hub
+psql -h /tmp -p 5435 -d past_paper_hub -f database/schema.sql
 ```
 
-### 2. Configure Database Connection
+**Option B — Supabase (recommended for persistence):**
 
-Edit `server/config/db.js` with your PostgreSQL credentials.
+1. Create a project at [supabase.com](https://supabase.com)
+2. Go to Project Settings → Database → Connection string
+3. Copy the connection string (starts with `postgresql://...`)
+4. Run the schema against it:
+   ```bash
+   psql "$YOUR_SUPABASE_CONNECTION_STRING" -f database/schema.sql
+   ```
+
+### 2. Seed the Database
+
+```bash
+# Generate a bcrypt hash for "password123" and run the INSERT
+# or use your Supabase SQL editor to run database/seed.sql
+```
 
 ### 3. Start the Backend
 
 ```bash
 cd server
 npm install
+
+# For local Postgres (uses /tmp socket):
 npm run dev
+
+# For Supabase (uses DATABASE_URL env var):
+DATABASE_URL="postgresql://..." npm run dev
 ```
 
 ### 4. Start the Frontend
@@ -45,57 +67,28 @@ npm install
 npm run dev
 ```
 
-### 5. Open the App
+Open `http://localhost:5173`
 
-Navigate to `http://localhost:5173`
+## Deploying to Cloudflare Pages
 
-## Deploy to Vercel
+### Via Dashboard (easiest)
 
-This repository now supports a single Vercel deployment for both the React client and the API.
+1. Push your repo to GitHub
+2. In Cloudflare Dashboard → Pages → Connect to Git
+3. Select your repo
+4. Set build settings:
+   - **Build command:** `cd client && npm install && npm run build`
+   - **Build output:** `client/dist`
+5. Deploy
 
-### 1. Prepare the Database
+### Via Wrangler CLI
 
-Create or update your PostgreSQL database using `database/schema.sql`.
+```bash
+npm install -g wrangler
+wrangler pages deploy client/dist --branch main
+```
 
-If you already have a database, make sure the `papers` table has a `file_data BYTEA NOT NULL` column.
-
-### 2. Set Environment Variables in Vercel
-
-Add these variables in the Vercel project settings:
-
-- `DATABASE_URL`
-- `SESSION_SECRET`
-- `CLIENT_ORIGIN` if you use a custom domain
-
-### 3. Import the Repository into Vercel
-
-- Framework preset: Other
-- Root directory: repository root
-- Build command: handled by `vercel.json`
-- Output directory: `client/dist`
-
-### 4. Deploy
-
-Vercel will:
-
-- install root dependencies for the API
-- install client dependencies
-- build the Vite app
-- serve the API from `/api/*`
-- serve the React SPA with route rewrites
-
-### 5. Verify
-
-- Open the Vercel URL
-- Log in and register
-- Browse departments and courses
-- Upload and download a paper
-
-### Notes
-
-- The backend now uses signed cookies instead of server sessions.
-- Uploaded papers are stored in PostgreSQL, not on local disk.
-- Relative `/api/*` calls from the client continue to work on Vercel.
+Your frontend will be live at `https://your-project.pages.dev`. Update the Vite proxy in `client/vite.config.js` to point to your deployed backend URL in production.
 
 ## Seed Accounts
 
@@ -107,6 +100,6 @@ Vercel will:
 
 ## Tech Stack
 
-- **Frontend**: React 18, React Router, Vite, Pure CSS
-- **Backend**: Express.js, express-session, multer, bcryptjs
-- **Database**: PostgreSQL with pg (node-postgres)
+- **Frontend:** React 18, React Router, Vite, Pure CSS — hosted on Cloudflare Pages
+- **Backend:** Express.js, multer, bcryptjs
+- **Database:** PostgreSQL (local or Supabase)
