@@ -2,7 +2,7 @@
 
 A full-stack web application for browsing, uploading, and managing past examination papers at Zambia University of Technology.
 
-**Frontend:** React.js (Cloudflare Pages) · **Backend:** Express.js (Dokploy) · **Database:** PostgreSQL (Dokploy)
+**Frontend:** React.js (Cloudflare Pages) · **Backend:** Express.js (Dokploy) · **Database:** PostgreSQL (auto-managed)
 
 ## Features
 
@@ -16,26 +16,9 @@ A full-stack web application for browsing, uploading, and managing past examinat
 ### Prerequisites
 
 - Node.js 18+
-- PostgreSQL 16+ (local development)
+- PostgreSQL 16+ installed (binaries available in PATH)
 
-### 1. Local Database Setup
-
-```bash
-initdb -D /tmp/pg_data --username=your_user --auth=trust
-pg_ctl -D /tmp/pg_data -o "-p 5435 -k /tmp" start
-createdb -h /tmp -p 5435 past_paper_hub
-psql -h /tmp -p 5435 -d past_paper_hub -f database/schema.sql
-```
-
-### 2. Seed the Database
-
-Run the seed script (generates bcrypt hashes and inserts sample data) or manually insert:
-
-```bash
-psql -h /tmp -p 5435 -d past_paper_hub -f database/seed.sql
-```
-
-### 3. Start the Backend
+### 1. Start the Backend
 
 ```bash
 cd server
@@ -43,7 +26,13 @@ npm install
 npm run dev
 ```
 
-### 4. Start the Frontend
+This single command handles everything automatically:
+- Starts PostgreSQL if not running
+- Creates the `past_paper_hub` database
+- Applies the schema and seed data
+- Launches the Express server on port 3001
+
+### 2. Start the Frontend
 
 ```bash
 cd client
@@ -51,92 +40,9 @@ npm install
 npm run dev
 ```
 
-Open `http://localhost:5173`
+### 3. Open the app
 
-## Deployment Guide
-
----
-
-## 1. Deploy Backend + Database (Dokploy with Docker Compose)
-
-A `docker-compose.yml` is included at the project root. This bundles both the Express backend and PostgreSQL into one stack.
-
-### Step 1: Push to GitHub
-
-```bash
-git push origin main
-```
-
-### Step 2: Import the stack into Dokploy
-
-1. Log into your Dokploy dashboard
-2. Click **"Create a new project"** → name it `past-paper-hub`
-3. Go to **"Compose"** → **"Import Compose"**
-4. Connect your GitHub repo and select the `docker-compose.yml` file
-5. Add these **environment variables** (they fill in the `${}` placeholders in the compose file):
-
-| Variable | Value | Why |
-|----------|-------|-----|
-| `DB_PASSWORD` | Choose a strong password | PostgreSQL password |
-| `SESSION_SECRET` | Run `openssl rand -hex 32` and paste | Signs session cookies |
-| `CLIENT_ORIGIN` | Your Cloudflare Pages URL (e.g. `https://past-paper-hub.pages.dev`) | Tells the backend which frontend URL is allowed via CORS |
-
-6. Click **"Deploy"**
-
-Dokploy will:
-- Spin up **PostgreSQL 16** with the schema automatically applied
-- Build and start the **Express backend** (waits for the database to be healthy)
-- Attach persistent volumes so data and uploads survive restarts
-
-Your backend will be available at the URL Dokploy assigns it.
-
----
-
-## 2. Deploy the Frontend (Cloudflare Pages)
-
-### Step 1: Connect Cloudflare to GitHub
-
-1. Go to [dash.cloudflare.com](https://dash.cloudflare.com) → **Pages**
-2. Click **"Connect to Git"** → select your repo → **"Begin setup"**
-
-### Step 2: Configure build settings
-
-| Setting | Value |
-|---------|-------|
-| **Build command** | `cd client && npm install && npm run build` |
-| **Build output** | `client/dist` |
-
-### Step 3: Deploy
-
-Click **"Save and Deploy"**. Once done, you'll get a URL like `https://your-project.pages.dev`.
-
-### Step 4: Point the frontend to your backend
-
-The frontend uses `import.meta.env.VITE_API_URL` as the base for all API calls. In Cloudflare Pages, set it as a build-time environment variable.
-
-Go to Cloudflare Pages → your project → **Settings** → **Environment variables** → **Add variable**:
-
-| Variable | Value |
-|----------|-------|
-| `VITE_API_URL` | `https://your-dokploy-backend-url.com` (no trailing slash) |
-
-Add it for **Production**, then go to the **Deployments** tab and click **"Retry deployment"** on the latest deployment. Cloudflare will rebuild with that URL baked in.
-
----
-
-## Local Development with Docker Compose
-
-Same compose file works locally — no Dokploy needed:
-
-```bash
-docker compose up --build
-```
-
-This starts PostgreSQL on port 5432 and the backend on port 3001. The frontend still runs separately:
-
-```bash
-cd client && npm run dev
-```
+Navigate to `http://localhost:5173`
 
 ## Seed Accounts
 
@@ -146,8 +52,36 @@ cd client && npm run dev
 | Lecturer | lecturer@zut.edu.zm   | password123 |
 | Student  | student@zut.edu.zm    | password123 |
 
+## Deployment
+
+### Frontend — Cloudflare Pages
+
+1. Push repo to GitHub
+2. Cloudflare Dashboard → Pages → Connect to Git → select repo
+3. **Build command:** `cd client && npm install && npm run build`
+4. **Build output:** `client/dist`
+5. Deploy
+6. Add environment variable: `VITE_API_URL` = your Dokploy backend URL
+7. Redeploy
+
+### Backend + Database — Dokploy (Docker Compose)
+
+A `docker-compose.yml` is included at the project root.
+
+1. In Dokploy, create a new project → **Compose** → **Import Compose**
+2. Point it at `docker-compose.yml` from the repo
+3. Add environment variables:
+
+| Variable | Value |
+|----------|-------|
+| `DB_PASSWORD` | Choose a strong password |
+| `SESSION_SECRET` | Run `openssl rand -hex 32` and paste |
+| `CLIENT_ORIGIN` | Your Cloudflare Pages URL (e.g. `https://project.pages.dev`) |
+
+4. Deploy
+
 ## Tech Stack
 
 - **Frontend:** React 18, React Router, Vite, Pure CSS — Cloudflare Pages
 - **Backend:** Express.js, multer, bcryptjs — Dokploy
-- **Database:** PostgreSQL — Dokploy
+- **Database:** PostgreSQL — auto-managed locally, Docker Compose in production
