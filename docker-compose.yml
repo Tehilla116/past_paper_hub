@@ -1,6 +1,8 @@
 services:
   postgres:
     image: postgres:16-alpine
+    ports:
+      - "5435:5432"
     environment:
       POSTGRES_DB: past_paper_hub
       POSTGRES_USER: postgres
