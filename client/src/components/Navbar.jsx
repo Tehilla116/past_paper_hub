@@ -18,7 +18,6 @@ export default function Navbar({ user, setUser }) {
         {user && (
           <div className="navbar-links">
             <Link to="/" className="nav-link">Home</Link>
-            <Link to="/departments" className="nav-link">Departments</Link>
             {(user.role === 'lecturer' || user.role === 'admin') && (
               <Link to="/upload" className="nav-link">Upload</Link>
             )}

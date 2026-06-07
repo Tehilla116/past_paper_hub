@@ -1,4 +1,7 @@
 import app from './app.js';
+import ensureDatabase from './db-setup.js';
+
+ensureDatabase();
 
 const PORT = process.env.PORT || 3001;
 
